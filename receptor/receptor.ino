@@ -19,7 +19,7 @@ MCUFRIEND_kbv tft;
 
 #define MAX_ELEMENTS_FILE 100
 #define MAX_ELEMENTS_ROOMS_TAB 5
-#define NB_REMOTE 255
+#define NB_REMOTE 50
 #define DELTA_ACQUISITION 3
 
 // Global vars
@@ -136,6 +136,16 @@ void loop() {
     secondeTrigger++;
     millisecondeTrigger = 0;
   }
+
+  // update bool buzzer
+  boolBuzzer = false;
+  for (int i = 0 ; i < MAX_ELEMENTS_ROOMS_TAB; i++){
+    if(tabRoomsIsUpdate[i] != 1){
+      boolBuzzer = true;
+      break;
+    }
+  }
+  
   
   if (timestamp > 60*60*24*7){ // reset all week
     timestamp = 0;
@@ -156,15 +166,27 @@ void loop() {
   if (man.receiveComplete()) {
     int temp = man.getMessage();
     man.beginReceive(); //start listening for next message right after you retrieve the message
-    enfiler(fileResponse,temp,timestamp);
 
-    // DEBUG
-    Serial.println("");
-    Serial.println("fileResponse : ");
-    displayFile(fileResponse);       
-    Serial.println("");
-    Serial.print("Seconde : ");
-    Serial.println(timestamp);
+    if(temp <= NB_REMOTE){
+      enfiler(fileResponse,temp,timestamp);
+
+      // DEBUG
+      Serial.println("");
+      Serial.println("fileResponse : ");
+      displayFile(fileResponse);       
+      Serial.println("");
+      Serial.print("Seconde : ");
+      Serial.println(timestamp);
+    }
+    else if (temp > NB_REMOTE && temp <= 2*NB_REMOTE){
+      for (int i = 0 ; i < MAX_ELEMENTS_ROOMS_TAB; i++){
+        if(tabRoomsIsUpdate[i] != 1 && tabRooms[i] == (temp-NB_REMOTE)){
+          tabRoomsIsUpdate[i] = 1;          
+        }
+      }
+    }
+
+
   }
 }
 
@@ -222,7 +244,6 @@ bool isTabUpdated() {
   bool ret = true;
   for (int i = 0; i < MAX_ELEMENTS_ROOMS_TAB; i++){
     if(tabRooms[i] != lastTabRooms[i]) {
-      boolBuzzer = true;
       ret = false;
       for (int j = 0; j < MAX_ELEMENTS_ROOMS_TAB; j++){
         lastTabRooms[j] = tabRooms[j];      
