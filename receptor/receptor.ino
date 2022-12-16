@@ -18,20 +18,20 @@
 MCUFRIEND_kbv tft;
 
 #define MAX_ELEMENTS_FILE 100
-#define MAX_ELEMENTS_ROOMS_TAB 5
+#define MAX_ELEMENTS_ROOMS_TAB 10
 #define NB_REMOTE 50
-#define DELTA_ACQUISITION 3
+#define DELTA_ACQUISITION 4
 
 // Global vars
-typedef struct Element Element;
 struct Element
 {
-    int nombre;
+    int number;
     int timestamp;
-    Element *suivant;
+    Element *next;
 };
+typedef struct Element Element;
 
-typedef struct File File;
+
 struct File
 {
     int size;
@@ -43,17 +43,17 @@ struct Pile
 {
     Element *premier;
 };
+typedef struct File File;
+
 
 int boolBuzzer = false;
 int tabRooms[MAX_ELEMENTS_ROOMS_TAB];
 int tabRoomsIsUpdate[MAX_ELEMENTS_ROOMS_TAB];
 int lastTabRooms[MAX_ELEMENTS_ROOMS_TAB];
-File *fileResponse = malloc(sizeof(*fileResponse));
-int triggerUpdate = 0;
+File *fileResponse = malloc(sizeof(struct File));
 int timestamp = 0;
 int secondeTrigger = 0;
 int millisecondeTrigger = 0;
-int nbCamaUpdate = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -81,12 +81,14 @@ void setup() {
     tabRooms[i] = 0;
     tabRoomsIsUpdate[i] = 1;   
   }
+  timestamp = 0;
+  secondeTrigger = 0;
+  millisecondeTrigger = 0;
 
-  Serial.println("");
-  Serial.println("Rooms call order : ");
+
+  Serial.println("\n Rooms call order : ");
   displayTab(tabRooms);
-  Serial.println("");
-  Serial.println("TabRoomsIsUpdate : ");
+  Serial.println("\n eTabRoomsIsUpdate : ");
   displayTab(tabRoomsIsUpdate);
 }
 
@@ -99,11 +101,12 @@ void loop() {
     setCamaDisplay();
     isTabUpdated();
     boolBuzzer = false;
-    nbCamaUpdate = 0;
   }
 
-  if (secondeTrigger > 250) {
+  if (secondeTrigger > 120) {
     timestamp++;
+    // Serial.println(timestamp);
+
     secondeTrigger = 0;
     if(boolBuzzer){
       buzzer();
@@ -165,30 +168,104 @@ void loop() {
   
   if (man.receiveComplete()) {
     int temp = man.getMessage();
+    Serial.println(temp);
     man.beginReceive(); //start listening for next message right after you retrieve the message
 
     if(temp <= NB_REMOTE){
       enfiler(fileResponse,temp,timestamp);
 
       // DEBUG
-      Serial.println("");
-      Serial.println("fileResponse : ");
-      displayFile(fileResponse);       
-      Serial.println("");
-      Serial.print("Seconde : ");
-      Serial.println(timestamp);
+      // Serial.println("");
+      // Serial.println("fileResponse : ");
+      // displayFile(fileResponse);       
+      // Serial.println("");
+      // Serial.print("Seconde : ");
+      // Serial.println(timestamp);
     }
     else if (temp > NB_REMOTE && temp <= 2*NB_REMOTE){
       for (int i = 0 ; i < MAX_ELEMENTS_ROOMS_TAB; i++){
         if(tabRoomsIsUpdate[i] != 1 && tabRooms[i] == (temp-NB_REMOTE)){
-          tabRoomsIsUpdate[i] = 1;          
+          tabRoomsIsUpdate[i] = 1;
         }
       }
     }
-
-
   }
 }
+
+// void setCamaDisplay(){
+//     if(tabRoomsIsUpdate[0] == 1) tft.setTextColor(WHITE);
+//     else                         tft.setTextColor(RED);
+//     tft.fillRect(90,2,90,60,BLACK);
+//     tft.setCursor(100,12);
+//     tft.setTextSize(6);
+//     tft.println(tabRooms[0]);
+
+//     if(tabRoomsIsUpdate[1] == 1) tft.setTextColor(WHITE);
+//     else                         tft.setTextColor(RED);
+//     tft.fillRect(20,40,80,50,BLACK);
+//     tft.setCursor(30,50);
+//     tft.setTextSize(4);
+//     tft.println(tabRooms[1]);
+    
+//     if(tabRoomsIsUpdate[2] == 1) tft.setTextColor(WHITE);
+//     else                         tft.setTextColor(RED);
+//     tft.fillRect(150,70,80,50,BLACK);
+//     tft.setCursor(160,80);
+//     tft.setTextSize(4);
+//     tft.println(tabRooms[2]);
+
+//     if(tabRoomsIsUpdate[3] == 1) tft.setTextColor(WHITE);
+//     else                         tft.setTextColor(RED);
+//     tft.fillRect(20,100,80,50,BLACK);
+//     tft.setCursor(30,110);
+//     tft.setTextSize(4);
+//     tft.println(tabRooms[3]);
+    
+//     if(tabRoomsIsUpdate[4] == 1) tft.setTextColor(WHITE);
+//     else                         tft.setTextColor(RED);
+//     tft.fillRect(150,130,80,50,BLACK);
+//     tft.setCursor(160,140);
+//     tft.setTextSize(4);
+//     tft.println(tabRooms[4]);
+
+//     if(tabRoomsIsUpdate[5] == 1) tft.setTextColor(WHITE);
+//     else                         tft.setTextColor(RED);
+//     tft.fillRect(20,160,80,50,BLACK);
+//     tft.setCursor(30,170);
+//     tft.setTextSize(4);
+//     tft.println(tabRooms[5]);
+    
+//     if(tabRoomsIsUpdate[6] == 1) tft.setTextColor(WHITE);
+//     else                         tft.setTextColor(RED);
+//     tft.fillRect(150,190,80,50,BLACK);
+//     tft.setCursor(160,200);
+//     tft.setTextSize(4);
+//     tft.println(tabRooms[6]);
+    
+//     if(tabRoomsIsUpdate[7] == 1) tft.setTextColor(WHITE);
+//     else                         tft.setTextColor(RED);
+//     tft.fillRect(20,220,80,50,BLACK);
+//     tft.setCursor(30,230);
+//     tft.setTextSize(4);
+//     tft.println(tabRooms[7]);
+
+//     if(tabRoomsIsUpdate[8] == 1) tft.setTextColor(WHITE);
+//     else                         tft.setTextColor(RED);
+//     tft.fillRect(150,250,80,50,BLACK);
+//     tft.setCursor(160,260);
+//     tft.setTextSize(4);
+//     tft.println(tabRooms[8]);
+
+//     if(tabRoomsIsUpdate[9] == 1) tft.setTextColor(WHITE);
+//     else                         tft.setTextColor(RED);
+//     tft.fillRect(20,280,80,50,BLACK);
+//     tft.setCursor(30,290);
+//     tft.setTextSize(4);
+//     tft.println(tabRooms[9]);
+    
+
+//     tft.setTextColor(WHITE);
+// }
 
 void setCamaDisplay(){
     if(tabRoomsIsUpdate[0] == 1) tft.setTextColor(WHITE);
@@ -256,10 +333,11 @@ bool isTabUpdated() {
 
 void updateTabRooms(File *file, int tabRooms[]){
     int sensibility = DELTA_ACQUISITION; //sec
-    int lastTimestamp = 0;
+    int lastTimestamp = file->premier->timestamp;
     int lastBed = 0;
     int nbIteration = 0;
-    int trig = 1;
+    int trig = 0;
+    int lastTabRoomsIsUpdate[MAX_ELEMENTS_ROOMS_TAB];
 
     Pile *pile = malloc(sizeof(*pile));
     pile->premier = NULL;
@@ -272,33 +350,42 @@ void updateTabRooms(File *file, int tabRooms[]){
     if (file->premier != NULL)
     {
         Element *temp = file->premier;
-        while (temp->suivant != NULL)
+        while (temp != NULL)
         {
-            if (temp->nombre == lastBed && mathAbs(temp->timestamp - lastTimestamp) <= sensibility) {
-                nbIteration++;
-                if(nbIteration >= 2 && trig) {
-                    empiler(pile, temp->nombre, temp->timestamp);
-                    nbIteration = 0;
-                    trig = 0;
-                }
-            }
-            else {
-                nbIteration = 0;
+            if (lastBed != temp->number || !trig) {   
+                empiler(pile, temp->number, temp->timestamp);
+                lastBed = temp->number;
                 lastTimestamp = temp->timestamp;
-                lastBed = temp->nombre;
-                trig = 1;
+
+                trig = 1;         
+     
+            }  
+            if(trig && mathAbs(temp->timestamp - lastTimestamp) > sensibility) {
+                // Serial.println(lastTimestamp);
+                lastBed = 0;
+                trig = 0;
             }
-            temp = temp->suivant;
+
+            
+            temp = temp->next;
         }
         //fill tabRooms
         for (int i = 0; i < MAX_ELEMENTS_ROOMS_TAB; i++){
+          lastTabRoomsIsUpdate[i] = tabRoomsIsUpdate[i];
+        }
+        for (int i = 0; i < MAX_ELEMENTS_ROOMS_TAB; i++){
           tabRooms[i] = depiler(pile);
         }
-        if (!isTabUpdated() && nbCamaUpdate < 5) {
-          nbCamaUpdate++;
+        if (!isTabUpdated()) {
+          tabRoomsIsUpdate[0] = 0;
 
-          for (int i = 0; i < nbCamaUpdate; i++){
-            tabRoomsIsUpdate[i] = 0;
+          for (int i = 0; i < MAX_ELEMENTS_ROOMS_TAB-1; i++){
+            if(lastTabRoomsIsUpdate[i] == 0){
+              tabRoomsIsUpdate[i+1] = 0;
+            }
+            else{
+              tabRoomsIsUpdate[i+1] = 1;
+            }
           }
         }
 
@@ -315,10 +402,6 @@ void buzzer(){
   digitalWrite(BUZZER, HIGH); 
   delay(50);
   digitalWrite(BUZZER, LOW); 
-  delay(100);
-  digitalWrite(BUZZER, HIGH); 
-  delay(50);
-  digitalWrite(BUZZER, LOW);
 }
 
 void initScreen(){
@@ -349,7 +432,7 @@ int mathAbs(int a) {
 }
 
 // Functions for pile management
-void empiler(Pile *pile, int nvNombre, int timestamp)
+void empiler(Pile *pile, int nvNumber, int timestamp)
 {
     Element *nouveau = malloc(sizeof(*nouveau));
     if (pile == NULL || nouveau == NULL)
@@ -357,9 +440,9 @@ void empiler(Pile *pile, int nvNombre, int timestamp)
         exit(EXIT_FAILURE);
     }
 
-    nouveau->nombre = nvNombre;
+    nouveau->number = nvNumber;
     nouveau->timestamp = timestamp;
-    nouveau->suivant = pile->premier;
+    nouveau->next = pile->premier;
     pile->premier = nouveau;
 }
 
@@ -370,17 +453,17 @@ int depiler(Pile *pile)
         exit(EXIT_FAILURE);
     }
 
-    int nombreDepile = 0;
+    int numberDepile = 0;
     Element *elementDepile = pile->premier;
 
     if (pile != NULL && pile->premier != NULL)
     {
-        nombreDepile = elementDepile->nombre;
-        pile->premier = elementDepile->suivant;
+        numberDepile = elementDepile->number;
+        pile->premier = elementDepile->next;
         free(elementDepile);
     }
 
-    return nombreDepile;
+    return numberDepile;
 }
 
 void displayPile(Pile *pile)
@@ -393,8 +476,8 @@ void displayPile(Pile *pile)
 
     while (actuel != NULL)
     {
-        printf("%d\n", actuel->nombre);
-        actuel = actuel->suivant;
+        printf("%d\n", actuel->number);
+        actuel = actuel->next;
     }
 
     printf("\n");
@@ -408,10 +491,10 @@ int isInPile(Pile *pile, int val){
 
     while (actuel != NULL)
     {
-        if (actuel->nombre == val){
+        if (actuel->number == val){
             return 1;
         }
-        actuel = actuel->suivant;
+        actuel = actuel->next;
     }
     return 0;
 }
@@ -429,8 +512,8 @@ void displayFile(File *file){
         Element *elementActuel = file->premier;
         while (elementActuel != NULL)
         {
-            Serial.print(elementActuel->nombre);
-            elementActuel = elementActuel->suivant;
+            Serial.print(elementActuel->number);
+            elementActuel = elementActuel->next;
         }
     }
 }
@@ -450,16 +533,16 @@ int defiler(File *file)
     {
         Element *elementDefile = file->premier;
 
-        nb = elementDefile->nombre;
+        nb = elementDefile->number;
 
-        file->premier = elementDefile->suivant;
+        file->premier = elementDefile->next;
         file->size--;
         free(elementDefile);
     }
     return nb;
 }
 
-void enfiler(File *file, int nvNombre, int timestamp)
+void enfiler(File *file, int nvNumber, int timestamp)
 {
     Element *nouveau = malloc(sizeof(*nouveau));
     if (file == NULL || nouveau == NULL)
@@ -467,9 +550,9 @@ void enfiler(File *file, int nvNombre, int timestamp)
         exit(EXIT_FAILURE);
     }
 
-    nouveau->nombre = nvNombre;
+    nouveau->number = nvNumber;
     nouveau->timestamp = timestamp;
-    nouveau->suivant = NULL;
+    nouveau->next = NULL;
     // Serial.print(**(file->premier));
 
     if (file->premier != NULL) /* La file n'est pas vide */
@@ -477,11 +560,11 @@ void enfiler(File *file, int nvNombre, int timestamp)
 
         /* On se positionne à la fin de la file */
         Element *elementActuel = file->premier;
-        while (elementActuel->suivant != NULL)
+        while (elementActuel->next != NULL)
         {
-            elementActuel = elementActuel->suivant;
+            elementActuel = elementActuel->next;
         }
-        elementActuel->suivant = nouveau;
+        elementActuel->next = nouveau;
         file->size++;
 
         // defile if the file size exceeds MAX_ELEMENTS_FILE
